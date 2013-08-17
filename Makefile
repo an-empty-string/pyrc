@@ -1,2 +1,2 @@
-docs:
+documentation:
 	epydoc -o docs --html .

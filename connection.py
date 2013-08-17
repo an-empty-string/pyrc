@@ -22,9 +22,12 @@
 
 
 import data.numerics
+import filters
 import logging
 import random
+import re
 import socket
+import structures
 import threading
 
 class Connection():
@@ -37,8 +40,18 @@ class Connection():
         """
         self.spec = spec
         self.waiting_for_server = True
-        self.nickname_negotiation = False
         self._handlers = []
+        # Dispatcher
+        self.dispatcher = structures.IncomingMessageDispatcher()
+        self.dispatcher.attach_destination(self._handle_ping, 
+                filters.PingFilter)
+        self.dispatcher.attach_destination(self._handle_endmotd, 
+                filters.EndMOTDFilter)
+        self.dispatcher.attach_destination(self._handle_nickinuse, 
+                filters.NickInUseFilter)
+        self.dispatcher.attach_destination(self._handle_privmsg,
+                filters.PrivmsgFilter)
+        # End dispatcher
         self._socket = socket.socket()
         self.spec._connect(self)
         threading.Thread(target=self.recvloop, name="Thread-Recv-Loop").start()
@@ -52,12 +65,8 @@ class Connection():
         """
         while True:
             text = self._socket.recv(1024).strip()
-            self._check_ping(text)
-            if self.waiting_for_server:
-                self._check_endmotd(text)
-            if self.nickname_negotiation:
-                self._check_nickinuse(text)
             logging.getLogger("pyrc.connection.recvloop").debug(text)
+            self.dispatcher.dispatch(text)
 
     def send_raw(self, text):
         """
@@ -85,26 +94,29 @@ class Connection():
         self.send_raw("PART %s" % chan)
 
     # Internally used methods    
-    def _check_ping(self, text):
-        spltext = text.split()
-        if spltext[0] == "PING":
-            logging.getLogger("pyrc.connection.recvloop.checkping")\
-                    .debug("Sending PONG")
-            self.send_raw("PONG %s" % spltext[1])
+    def _handle_ping(self, text):
+        logging.getLogger("pyrc.connection.recvloop.checkping")\
+                .debug("Sending PONG")
+        self.send_raw("PONG %s" % text.split()[1])
 
-    def _check_endmotd(self, text):
-        if data.numerics.numerics["RPL_ENDOFMOTD"] in text or\
-                data.numerics.numerics["ERR_NOMOTD"] in text:
-            logging.getLogger("pyrc.connection.recvloop.checkmotd")\
-                    .debug("End of MOTD.")
-            self.waiting_for_server = False
-            self.nickname_negotiation = False
+    def _handle_endmotd(self, text):
+        logging.getLogger("pyrc.connection.recvloop.checkmotd")\
+                .debug("End of MOTD.")
+        self.waiting_for_server = False
+        self.dispatcher.detach_destination(self._handle_nickinuse)
+        self.dispatcher.detach_destination(self._handle_endmotd)
 
-    def _check_nickinuse(self, text):
-        if data.numerics.numerics["ERR_NICKNAMEINUSE"] in text:
-            self.spec.userspec.nick = self.spec.userspec.nick + "_"
-            self.spec.userspec._send_info(self)
-        if data.numerics.numerics["ERR_ERRONEUSNICKNAME"] in text:
-            self.spec.userspec.nick = "pyrc%s" % random.randint(0, 99999)
-            self.spec.userspec._send_info(self)
+    def _handle_nickinuse(self, text):
+        self.spec.userspec.nick = self.spec.userspec.nick + "_"
+        self.spec.userspec._send_info(self)
+
+    def _handle_privmsg(self, text):
+        match = re.match(":(.*!.*@.*) PRIVMSG (.*) :(.*)", text)
+        hostmask = match.group(1)
+        dest = match.group(2)
+        message = match.group(3)
+        logging.getLogger("pyrc.connection.recvloop.checkprivmsg")\
+                .debug("PRIVMSG received, sent by %s to %s message %s" % (
+                    hostmask, dest, message))
+
 
