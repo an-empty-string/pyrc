@@ -22,6 +22,7 @@
 
 
 import logging
+import time
 
 class ServerSpec():
     def __init__(self, userspec, host="irc.freenode.org", port=6667, password=""):
@@ -37,8 +38,8 @@ class ServerSpec():
         if self.password != "":
             logging.getLogger("pyrc.serverspec")\
                     .debug("Sending server password")
-            sock.send("PASS %s" % self.password)
-        self.userspec._send_info(sock, self.host)
+            sock.send("PASS %s\n" % self.password)
+        self.userspec._send_info(sock)
 
 class UserSpec():
     def __init__(self, nick, ident=None, realname=None):
@@ -47,5 +48,6 @@ class UserSpec():
         self.realname = nick if realname is None else realname
 
     def _send_info(self, sock):
-        sock.send("NICK %s" % self.nick)
-        sock.send("USER %s 0 * :%s" % (self.ident, self.realname))
+        logging.getLogger("pyrc.userspec").info("Sending nick/user")
+        sock.send("NICK %s\n" % self.nick)
+        sock.send("USER %s 0 * :%s\n" % (self.ident, self.realname))

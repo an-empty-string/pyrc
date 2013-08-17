@@ -21,6 +21,7 @@
 #
 
 
+import data.numerics
 import logging
 import socket
 import threading
@@ -28,11 +29,37 @@ import threading
 class Connection():
     def __init__(self, spec):
         self.spec = spec
-        self.socket = socket.socket()
-        self.spec._connect(self.socket)
+        self.waiting_for_server = True
+        self._handlers = []
+        self._socket = socket.socket()
+        self.spec._connect(self._socket)
         threading.Thread(target=self.recvloop, name="Thread-Recv-Loop").start()
+        while self.waiting_for_server:
+            pass
 
     def recvloop(self):
         while True:
-            text = self.socket.recv(1024).strip()
+            text = self._socket.recv(1024).strip()
+            self._check_ping(text)
+            if self.waiting_for_server:
+                self._check_endmotd(text)
             logging.getLogger("pyrc.connection.recvloop").debug(text)
+
+    def _check_ping(self, text):
+        spltext = text.split()
+        if spltext[0] == "PING":
+            logging.getLogger("pyrc.connection.recvloop.checkping")\
+                    .debug("Sending PONG")
+            self.send_raw("PONG %s" % spltext[1])
+
+    def _check_endmotd(self, text):
+        if data.numerics.numerics["RPL_ENDOFMOTD"] in text:
+            logging.getLogger("pyrc.connection.recvloop.checkmotd")\
+                    .debug("End of MOTD.")
+            self.waiting_for_server = False
+
+    def send_raw(self, text):
+        self._socket.send(text + "\n")
+
+    def attach_handler(self, handler):
+        self._handlers.append(handler)
