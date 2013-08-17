@@ -22,18 +22,18 @@
 
 
 import logging
-import time
+
 
 class ServerSpec():
     """
     ServerSpec represents the information needed to connect to a server.
     """
-    def __init__(self, userspec, host="irc.freenode.org", port=6667, 
-            password=""):
+    def __init__(self, userspec, host="irc.freenode.org", port=6667,
+                 password=""):
         """
         Initializes a ServerSpec. The only required argument is a UserSpec,
         however, a host, port, and password can be specified. If they are not,
-        they default to irc.freenode.org, 6667, and a blank string, 
+        they default to irc.freenode.org, 6667, and a blank string,
         respectively.
         """
         self.host = host
@@ -42,14 +42,15 @@ class ServerSpec():
         self.userspec = userspec
 
     def _connect(self, connection):
-        logging.getLogger("pyrc.serverspec")\
-                .info("Connecting to %s:%s" % (self.host, self.port))
+        logging.getLogger("pyrc.serverspec") \
+            .info("Connecting to %s:%s" % (self.host, self.port))
         connection._socket.connect((self.host, self.port))
         if self.password != "":
-            logging.getLogger("pyrc.serverspec")\
-                    .debug("Sending server password")
+            logging.getLogger("pyrc.serverspec") \
+                .debug("Sending server password")
             connection.send_raw("PASS %s\n" % self.password)
         self.userspec._send_info(connection)
+
 
 class UserSpec():
     """

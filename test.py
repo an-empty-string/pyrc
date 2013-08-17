@@ -1,8 +1,8 @@
-#     //   ) )          //   ) )  //   ) ) 
-#    //___/ /          //___/ /  //        
-#   / ____ / //   / / / ___ (   //         
-#  //       ((___/ / //   | |  //          
-# //            / / //    | | ((____/ /    
+#     //   ) )          //   ) )  //   ) )
+#    //___/ /          //___/ /  //
+#   / ____ / //   / / / ___ (   //
+#  //       ((___/ / //   | |  //
+# //            / / //    | | ((____/ /
 #
 # This file is part of PyRC.
 #
@@ -28,8 +28,8 @@ import spec
 if __name__ == "__main__":
     uspec = spec.UserSpec("pyrcbot", "fwilson", "fwilix bot")
     sspec = spec.ServerSpec(uspec, host="irc.freenode.org")
-    
+
     logging.basicConfig(level=logging.DEBUG)
-    
+
     conn = connection.Connection(sspec)
     conn.join("#pyrc-devel")
