@@ -25,9 +25,11 @@ import logging
 
 
 class ServerSpec():
+
     """
     ServerSpec represents the information needed to connect to a server.
     """
+
     def __init__(self, userspec, host="irc.freenode.org", port=6667,
                  password=""):
         """
@@ -53,9 +55,11 @@ class ServerSpec():
 
 
 class UserSpec():
+
     """
     UserSpec represents the information needed to identify to an IRC server.
     """
+
     def __init__(self, nick, ident=None, realname=None):
         """
         Initializes a UserSpec. The only required argument is a nickname,

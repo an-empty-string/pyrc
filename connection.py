@@ -29,9 +29,11 @@ import threading
 
 
 class Connection():
+
     """
     A Connection represents a connection to an IRC server.
     """
+
     def __init__(self, spec):
         """
         Initialize a connection. Takes a ServerSpec as an argument.
