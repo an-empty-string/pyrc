@@ -25,10 +25,10 @@ import connection
 import logging
 import spec
 
-uspec = spec.UserSpec("fwilixbot", "fwilson", "fwilix bot")
+uspec = spec.UserSpec("pyrcbot", "fwilson", "fwilix bot")
 sspec = spec.ServerSpec(uspec, host="irc.freenode.org")
 
 logging.basicConfig(level=logging.DEBUG)
 
 conn = connection.Connection(sspec)
-conn.send_raw("JOIN #pyrc-devel")
+conn.join("#tjhsst")

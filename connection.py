@@ -28,7 +28,13 @@ import socket
 import threading
 
 class Connection():
+    """
+    A Connection represents a connection to an IRC server.
+    """
     def __init__(self, spec):
+        """
+        Initialize a connection. Takes a ServerSpec as an argument.
+        """
         self.spec = spec
         self.waiting_for_server = True
         self.nickname_negotiation = False
@@ -40,6 +46,10 @@ class Connection():
             pass
 
     def recvloop(self):
+        """
+        This function is automatically called by initializing the Connection.
+        This handles all incoming messages from the server.
+        """
         while True:
             text = self._socket.recv(1024).strip()
             self._check_ping(text)
@@ -49,6 +59,32 @@ class Connection():
                 self._check_nickinuse(text)
             logging.getLogger("pyrc.connection.recvloop").debug(text)
 
+    def send_raw(self, text):
+        """
+        Send a raw string to the IRC server.
+        """
+        self._socket.send(text + "\n")
+
+    def attach_handler(self, handler):
+        """
+        Attach a subclass of Handler to the Connection. Events from the 
+        Connection will be passed to the relevant function in the handler.
+        """
+        self._handlers.append(handler)
+
+    def join(self, chan):
+        """
+        Join a channel.
+        """
+        self.send_raw("JOIN %s" % chan)
+
+    def part(self, chan):
+        """
+        Part a channel.
+        """
+        self.send_raw("PART %s" % chan)
+
+    # Internally used methods    
     def _check_ping(self, text):
         spltext = text.split()
         if spltext[0] == "PING":
@@ -72,8 +108,3 @@ class Connection():
             self.spec.userspec.nick = "pyrc%s" % random.randint(0, 99999)
             self.spec.userspec._send_info(self)
 
-    def send_raw(self, text):
-        self._socket.send(text + "\n")
-
-    def attach_handler(self, handler):
-        self._handlers.append(handler)
