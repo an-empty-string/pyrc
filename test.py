@@ -32,4 +32,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     
     conn = connection.Connection(sspec)
-    conn.join("#tjhsst")
+    conn.join("#pyrc-devel")
