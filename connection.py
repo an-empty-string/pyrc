@@ -1,8 +1,8 @@
-#     //   ) )          //   ) )  //   ) ) 
-#    //___/ /          //___/ /  //        
-#   / ____ / //   / / / ___ (   //         
-#  //       ((___/ / //   | |  //          
-# //            / / //    | | ((____/ /    
+#     //   ) )          //   ) )  //   ) )
+#    //___/ /          //___/ /  //
+#   / ____ / //   / / / ___ (   //
+#  //       ((___/ / //   | |  //
+# //            / / //    | | ((____/ /
 #
 # This file is part of PyRC.
 #
@@ -30,10 +30,13 @@ import socket
 import structures
 import threading
 
+
 class Connection():
+
     """
     A Connection represents a connection to an IRC server.
     """
+
     def __init__(self, spec):
         """
         Initialize a connection. Takes a ServerSpec as an argument.
@@ -76,7 +79,7 @@ class Connection():
 
     def attach_handler(self, handler):
         """
-        Attach a subclass of Handler to the Connection. Events from the 
+        Attach a subclass of Handler to the Connection. Events from the
         Connection will be passed to the relevant function in the handler.
         """
         self._handlers.append(handler)
@@ -118,5 +121,4 @@ class Connection():
         logging.getLogger("pyrc.connection.recvloop.checkprivmsg")\
                 .debug("PRIVMSG received, sent by %s to %s message %s" % (
                     hostmask, dest, message))
-
 
