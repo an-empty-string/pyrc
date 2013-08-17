@@ -31,15 +31,15 @@ class ServerSpec():
         self.password = password
         self.userspec = userspec
 
-    def _connect(self, sock):
+    def _connect(self, connection):
         logging.getLogger("pyrc.serverspec")\
                 .info("Connecting to %s:%s" % (self.host, self.port))
-        sock.connect((self.host, self.port))
+        connection._socket.connect((self.host, self.port))
         if self.password != "":
             logging.getLogger("pyrc.serverspec")\
                     .debug("Sending server password")
-            sock.send("PASS %s\n" % self.password)
-        self.userspec._send_info(sock)
+            connection.send_raw("PASS %s\n" % self.password)
+        self.userspec._send_info(connection)
 
 class UserSpec():
     def __init__(self, nick, ident=None, realname=None):
@@ -47,7 +47,8 @@ class UserSpec():
         self.ident = nick if ident is None else ident
         self.realname = nick if realname is None else realname
 
-    def _send_info(self, sock):
+    def _send_info(self, connection):
         logging.getLogger("pyrc.userspec").info("Sending nick/user")
-        sock.send("NICK %s\n" % self.nick)
-        sock.send("USER %s 0 * :%s\n" % (self.ident, self.realname))
+        connection.send_raw("USER %s 0 * :%s\n" % (self.ident, self.realname))
+        connection.nickname_negotiation = True
+        connection.send_raw("NICK %s\n" % self.nick)

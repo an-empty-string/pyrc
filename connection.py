@@ -23,6 +23,7 @@
 
 import data.numerics
 import logging
+import random
 import socket
 import threading
 
@@ -30,9 +31,10 @@ class Connection():
     def __init__(self, spec):
         self.spec = spec
         self.waiting_for_server = True
+        self.nickname_negotiation = False
         self._handlers = []
         self._socket = socket.socket()
-        self.spec._connect(self._socket)
+        self.spec._connect(self)
         threading.Thread(target=self.recvloop, name="Thread-Recv-Loop").start()
         while self.waiting_for_server:
             pass
@@ -43,6 +45,8 @@ class Connection():
             self._check_ping(text)
             if self.waiting_for_server:
                 self._check_endmotd(text)
+            if self.nickname_negotiation:
+                self._check_nickinuse(text)
             logging.getLogger("pyrc.connection.recvloop").debug(text)
 
     def _check_ping(self, text):
@@ -53,10 +57,20 @@ class Connection():
             self.send_raw("PONG %s" % spltext[1])
 
     def _check_endmotd(self, text):
-        if data.numerics.numerics["RPL_ENDOFMOTD"] in text:
+        if data.numerics.numerics["RPL_ENDOFMOTD"] in text or\
+                data.numerics.numerics["ERR_NOMOTD"] in text:
             logging.getLogger("pyrc.connection.recvloop.checkmotd")\
                     .debug("End of MOTD.")
             self.waiting_for_server = False
+            self.nickname_negotiation = False
+
+    def _check_nickinuse(self, text):
+        if data.numerics.numerics["ERR_NICKNAMEINUSE"] in text:
+            self.spec.userspec.nick = self.spec.userspec.nick + "_"
+            self.spec.userspec._send_info(self)
+        if data.numerics.numerics["ERR_ERRONEUSNICKNAME"] in text:
+            self.spec.userspec.nick = "pyrc%s" % random.randint(0, 99999)
+            self.spec.userspec._send_info(self)
 
     def send_raw(self, text):
         self._socket.send(text + "\n")
