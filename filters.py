@@ -1,8 +1,8 @@
-#     //   ) )          //   ) )  //   ) ) 
-#    //___/ /          //___/ /  //        
-#   / ____ / //   / / / ___ (   //         
-#  //       ((___/ / //   | |  //          
-# //            / / //    | | ((____/ /    
+#     //   ) )          //   ) )  //   ) )
+#    //___/ /          //___/ /  //
+#   / ____ / //   / / / ___ (   //
+#  //       ((___/ / //   | |  //
+# //            / / //    | | ((____/ /
 #
 # This file is part of PyRC.
 #
@@ -24,6 +24,7 @@
 import data.numerics
 import re
 
+
 class Filter():
     def __init__(self):
         pass
@@ -31,15 +32,18 @@ class Filter():
     def run(self, text):
         return False
 
+
 class DefaultFilter(Filter):
     def run(self, text):
         return False
+
 
 class PingFilter(Filter):
     def run(self, text):
         if text.split()[0] == "PING":
             return True
         return False
+
 
 class EndMOTDFilter(Filter):
     def run(self, text):
@@ -48,11 +52,13 @@ class EndMOTDFilter(Filter):
             return True
         return False
 
+
 class PrivmsgFilter(Filter):
     def run(self, text):
         if re.match(":(.*!.*@.*) PRIVMSG (.*) :(.*)", text):
             return True
         return False
+
 
 class NickInUseFilter(Filter):
     def run(self, text):
@@ -61,3 +67,16 @@ class NickInUseFilter(Filter):
         return False
 
 
+class EndWhoisFilter(Filter):
+    def run(self, text):
+        if data.numerics.numerics["RPL_ENDOFWHOIS"] in text:
+            return True
+        return False
+
+
+class WhoisDataFilter(Filter):
+    def run(self, text):
+        numeric = text.split()[1]
+        if numeric in ["311", "312", "313", "317", "319", "330"]:
+            return True
+        return False

@@ -24,6 +24,7 @@
 import connection
 import logging
 import spec
+import structures
 
 if __name__ == "__main__":
     uspec = spec.UserSpec("pyrcbot", "fwilson", "fwilix bot")
@@ -33,3 +34,4 @@ if __name__ == "__main__":
 
     conn = connection.Connection(sspec)
     conn.join("#pyrc-devel")
+    structures.User("fwilson!bouncer@wikipedia/Fox-Wilson").whois(conn)

@@ -1,8 +1,8 @@
-#     //   ) )          //   ) )  //   ) ) 
-#    //___/ /          //___/ /  //        
-#   / ____ / //   / / / ___ (   //         
-#  //       ((___/ / //   | |  //          
-# //            / / //    | | ((____/ /    
+#     //   ) )          //   ) )  //   ) )
+#    //___/ /          //___/ /  //
+#   / ____ / //   / / / ___ (   //
+#  //       ((___/ / //   | |  //
+# //            / / //    | | ((____/ /
 #
 # This file is part of PyRC.
 #
@@ -22,6 +22,8 @@
 
 
 import filters
+import logging
+
 
 class User():
     """
@@ -38,7 +40,29 @@ class User():
         self.waiting_for_server = False
 
     def whois(self, connection):
-        waiting_for_server = True
+        self.waiting_for_server = True
+        self._conn = connection
+        self._whois_data = []
+        connection.send_raw("WHOIS %s\n" % self.nick)
+        connection.dispatcher.attach_destination(self._end_whois,
+                                                 filters.EndWhoisFilter)
+        connection.dispatcher.attach_destination(self._proc_whois,
+                                                 filters.WhoisDataFilter)
+        while self.waiting_for_server:
+            pass
+        print self._whois_data
+
+    def _proc_whois(self, text):
+        logging.getLogger("pyrc.user.whois").debug(text)
+        self._whois_data.append(text)
+
+    def _end_whois(self, text):
+        logging.getLogger("pyrc.user.whois").debug("End of WHOIS.")
+        self.waiting_for_server = False
+        self._conn.dispatcher.detach_destination(self._end_whois)
+        self._conn.dispatcher.detach_destination(self._proc_whois)
+        del self._conn
+
 
 class Channel():
     """
@@ -50,12 +74,13 @@ class Channel():
         """
         self.chan = chan
 
+
 class IncomingMessageDispatcher():
     """
-    IncomingMessageDispatcher is an internally used class to keep track of incoming 
-    messages.
+    IncomingMessageDispatcher is an internally used class to keep track of
+    incoming messages.
     """
-    def __init__(self): 
+    def __init__(self):
         self._destinations = {}
 
     def dispatch(self, message):
@@ -71,6 +96,3 @@ class IncomingMessageDispatcher():
             del self._destinations[dest]
         except:
             pass
-
-
-    

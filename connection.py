@@ -21,10 +21,8 @@
 #
 
 
-import data.numerics
 import filters
 import logging
-import random
 import re
 import socket
 import structures
@@ -46,14 +44,14 @@ class Connection():
         self._handlers = []
         # Dispatcher
         self.dispatcher = structures.IncomingMessageDispatcher()
-        self.dispatcher.attach_destination(self._handle_ping, 
-                filters.PingFilter)
-        self.dispatcher.attach_destination(self._handle_endmotd, 
-                filters.EndMOTDFilter)
-        self.dispatcher.attach_destination(self._handle_nickinuse, 
-                filters.NickInUseFilter)
+        self.dispatcher.attach_destination(self._handle_ping,
+                                           filters.PingFilter)
+        self.dispatcher.attach_destination(self._handle_endmotd,
+                                           filters.EndMOTDFilter)
+        self.dispatcher.attach_destination(self._handle_nickinuse,
+                                           filters.NickInUseFilter)
         self.dispatcher.attach_destination(self._handle_privmsg,
-                filters.PrivmsgFilter)
+                                           filters.PrivmsgFilter)
         # End dispatcher
         self._socket = socket.socket()
         self.spec._connect(self)
@@ -96,15 +94,15 @@ class Connection():
         """
         self.send_raw("PART %s" % chan)
 
-    # Internally used methods    
+    # Internally used methods
     def _handle_ping(self, text):
         logging.getLogger("pyrc.connection.recvloop.checkping")\
-                .debug("Sending PONG")
+            .debug("Sending PONG")
         self.send_raw("PONG %s" % text.split()[1])
 
     def _handle_endmotd(self, text):
         logging.getLogger("pyrc.connection.recvloop.checkmotd")\
-                .debug("End of MOTD.")
+            .debug("End of MOTD.")
         self.waiting_for_server = False
         self.dispatcher.detach_destination(self._handle_nickinuse)
         self.dispatcher.detach_destination(self._handle_endmotd)
@@ -119,6 +117,5 @@ class Connection():
         dest = match.group(2)
         message = match.group(3)
         logging.getLogger("pyrc.connection.recvloop.checkprivmsg")\
-                .debug("PRIVMSG received, sent by %s to %s message %s" % (
-                    hostmask, dest, message))
-
+            .debug("PRIVMSG received, sent by %s to %s message %s" % (
+                   hostmask, dest, message))
